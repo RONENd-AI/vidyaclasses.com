@@ -67,26 +67,54 @@ const initUsersManager = () => {
     addUserForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         window.showLoader();
+        
         const name = document.getElementById('newUserName').value.trim();
         const grade = document.getElementById('newUserGrade').value;
         const customId = document.getElementById('newUserId').value.trim().toUpperCase();
         const password = document.getElementById('newUserPass').value.trim();
+        const phone = document.getElementById('newUserPhone').value.trim();
+        const address = document.getElementById('newUserAddress').value.trim();
+        
         try {
              window.showToast("Creating user...", "warning");
              const mockEmail = `${customId.toLowerCase()}@vidyaclasses.com`;
              const secondaryApp = firebase.initializeApp(window.auth.app.options, "Secondary");
              const userCred = await secondaryApp.auth().createUserWithEmailAndPassword(mockEmail, password);
+             
              await window.db.collection("users").doc(userCred.user.uid).set({
-                 name, grade, customId, role: 'student'
+                 name, 
+                 grade, 
+                 customId, 
+                 role: 'student',
+                 phone,
+                 address
              });
+             
              await secondaryApp.delete();
              window.showToast("Student created successfully!", "success");
              addUserForm.reset();
              loadStudentList();
-        } catch (error) { window.showToast("Failed to create student", "error"); }
+        } catch (error) { 
+             window.showToast("Failed to create student: " + error.message, "error"); 
+             console.error(error);
+        }
         window.hideLoader();
     });
     loadStudentList();
+};
+
+window.deleteStudent = async (docId, customId) => {
+    if (confirm(`Are you extremely sure you want to permanently remove the student ID: ${customId} from the database?`)) {
+        window.showLoader();
+        try {
+            await window.db.collection("users").doc(docId).delete();
+            window.showToast(`Student ${customId} removed!`, "success");
+            loadStudentList();
+        } catch (e) {
+            window.showToast("Failed to delete student", "error");
+        }
+        window.hideLoader();
+    }
 };
 
 const loadStudentList = async () => {
@@ -95,10 +123,21 @@ const loadStudentList = async () => {
     try {
         const snapshot = await window.db.collection("users").where("role", "==", "student").get();
         tbody.innerHTML = '';
-        if (snapshot.empty) tbody.innerHTML = '<tr><td colspan="4" class="text-muted text-center">No students found.</td></tr>';
+        if (snapshot.empty) tbody.innerHTML = '<tr><td colspan="6" class="text-muted text-center">No students found.</td></tr>';
         snapshot.forEach(doc => {
             const data = doc.data();
-            tbody.innerHTML += `<tr><td><strong>${data.customId}</strong></td><td>${data.name}</td><td><span class="badge badge-success">${data.grade}</span></td></tr>`;
+            tbody.innerHTML += `
+                <tr>
+                    <td><strong>${data.customId}</strong></td>
+                    <td>${data.name}</td>
+                    <td><span class="badge badge-success">${data.grade}</span></td>
+                    <td style="font-size: 0.9rem;">${data.phone || 'N/A'}</td>
+                    <td style="font-size: 0.9rem; max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${data.address || ''}">
+                        ${data.address || 'N/A'}
+                    </td>
+                    <td><button class="btn btn-danger btn-sm" onclick="window.deleteStudent('${doc.id}', '${data.customId}')">Remove</button></td>
+                </tr>
+            `;
         });
     } catch(err) {}
 };
