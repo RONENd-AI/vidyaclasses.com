@@ -77,10 +77,10 @@ window.loadAdminView = () => `
         <div id="admin-users" class="tab-content" style="display: none;">
             <div class="card mb-4" style="margin-bottom: 2rem;">
                 <h3>Add New Student</h3>
-                <form id="addUserForm" class="grid grid-cols-3" style="margin-top: 1.5rem; align-items: end;">
+                <form id="addUserForm" class="grid grid-cols-2" style="margin-top: 1.5rem; gap: 1rem; align-items: end;">
                     <div class="form-group" style="margin-bottom: 0;">
                         <label class="form-label">Full Name</label>
-                        <input type="text" id="newUserName" class="form-control" required>
+                        <input type="text" id="newUserName" class="form-control" placeholder="John Doe" required>
                     </div>
                     <div class="form-group" style="margin-bottom: 0;">
                         <label class="form-label">Grade</label>
@@ -92,13 +92,21 @@ window.loadAdminView = () => `
                     </div>
                     <div class="form-group" style="margin-bottom: 0;">
                         <label class="form-label">Custom ID (e.g. VP1001)</label>
-                        <input type="text" id="newUserId" class="form-control" required>
+                        <input type="text" id="newUserId" class="form-control" placeholder="VP1001" required>
                     </div>
                     <div class="form-group" style="margin-bottom: 0;">
                         <label class="form-label">Password</label>
-                        <input type="text" id="newUserPass" class="form-control" required>
+                        <input type="text" id="newUserPass" class="form-control" placeholder="Password@123" required>
                     </div>
-                    <button type="submit" class="btn btn-primary">Add Student</button>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Contact Number</label>
+                        <input type="text" id="newUserPhone" class="form-control" placeholder="9876543210" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Address</label>
+                        <textarea id="newUserAddress" class="form-control" rows="1" placeholder="Flat No. 1, Pune" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="grid-column: span 2;">Create Student Account</button>
                 </form>
             </div>
             <div class="card">
@@ -110,6 +118,9 @@ window.loadAdminView = () => `
                                 <th>ID</th>
                                 <th>Name</th>
                                 <th>Grade</th>
+                                <th>Contact</th>
+                                <th>Address</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody><!-- dynamic --></tbody>
