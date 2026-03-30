@@ -131,6 +131,7 @@ p { color: var(--text-secondary); line-height: 1.6; }
 }
 .btn-danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.2); }
 .btn-danger:hover { background: var(--danger); color: white; }
+.btn-sm { padding: 0.4rem 0.8rem; font-size: 0.8rem; border-radius: 6px; }
 
 /* Forms & Inputs */
 .form-group { margin-bottom: 1.5rem; }
