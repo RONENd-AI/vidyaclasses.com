@@ -2,8 +2,10 @@ window.setupAdminPanel = () => {
     initTabs();
     initNotices();
     initUsersManager();
+    initPromotionTool();
     initAttendance();
     initResultsManager();
+    initAdminChats();
 };
 
 const initTabs = () => {
@@ -74,6 +76,7 @@ const initUsersManager = () => {
         const password = document.getElementById('newUserPass').value.trim();
         const phone = document.getElementById('newUserPhone').value.trim();
         const address = document.getElementById('newUserAddress').value.trim();
+        const batch = document.getElementById('newUserBatch').value.trim();
         
         try {
              window.showToast("Creating user...", "warning");
@@ -84,6 +87,7 @@ const initUsersManager = () => {
              await window.db.collection("users").doc(userCred.user.uid).set({
                  name, 
                  grade, 
+                 batch,
                  customId, 
                  role: 'student',
                  phone,
@@ -101,6 +105,49 @@ const initUsersManager = () => {
         window.hideLoader();
     });
     window.loadStudentList();
+};
+
+const initPromotionTool = () => {
+    const promoForm = document.getElementById('promoteForm');
+    promoForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const targetBatch = document.getElementById('promoBatch').value.trim();
+        const currentGrade = document.getElementById('promoCurrentGrade').value;
+        const newGrade = document.getElementById('promoNewGrade').value;
+
+        if (confirm(`MASS PROMOTION:\nAre you sure you want to promote ALL students in Batch [${targetBatch}] currently in [${currentGrade}] to [${newGrade}]?`)) {
+            window.showLoader();
+            try {
+                // Fetch all students matching Batch and current Grade
+                const studentsRef = window.db.collection('users');
+                const snapshot = await studentsRef
+                    .where('role', '==', 'student')
+                    .where('batch', '==', targetBatch)
+                    .where('grade', '==', currentGrade)
+                    .get();
+
+                if (snapshot.empty) {
+                    window.showToast("No students found matching that exact Batch and Grade.", "warning");
+                    window.hideLoader();
+                    return;
+                }
+
+                // Execute mass update using batch writes
+                const batchWrite = window.db.batch();
+                snapshot.forEach(doc => {
+                    batchWrite.update(doc.ref, { grade: newGrade });
+                });
+
+                await batchWrite.commit();
+                window.showToast(`Successfully moved ${snapshot.size} students to ${newGrade}!`, "success");
+                window.loadStudentList();
+            } catch (err) {
+                window.showToast("Promotion Failed", "error");
+                console.error(err);
+            }
+            window.hideLoader();
+        }
+    });
 };
 
 window.deleteStudent = async (docId, customId) => {
@@ -131,7 +178,7 @@ window.loadStudentList = async () => {
                 <tr>
                     <td><strong>${data.customId}</strong></td>
                     <td>${data.name}</td>
-                    <td><span class="badge badge-success">${data.grade}</span></td>
+                    <td><span class="badge badge-success">${data.grade}</span> <span class="badge badge-accent">${data.batch || 'No Batch'}</span></td>
                     <td style="font-size: 0.9rem;">${data.phone || 'N/A'}</td>
                     <td style="font-size: 0.9rem; max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${data.address || ''}">
                         ${data.address || 'N/A'}
@@ -209,5 +256,88 @@ const initResultsManager = () => {
             postResultForm.reset();
         } catch (err) { window.showToast("Failed to post result", "error"); }
         window.hideLoader();
+    });
+};
+
+// --- Real-Time Chat System (Admin Side) ---
+let currentAdminChatUnsubscribe = null;
+let activeChatroomId = null;
+
+const initAdminChats = () => {
+    const loadBtn = document.getElementById('loadAdminChatBtn');
+    const sendBtn = document.getElementById('adminChatSendBtn');
+    const inputField = document.getElementById('adminChatInput');
+    const chatForm = document.getElementById('adminChatForm');
+    
+    loadBtn.addEventListener('click', () => {
+        const targetGrade = document.getElementById('adminChatGrade').value;
+        const targetBatch = document.getElementById('adminChatBatch').value.trim();
+        
+        if (!targetBatch) return window.showToast("Enter a Batch first", "warning");
+        
+        // Define universal chatroom ID string
+        activeChatroomId = `${targetGrade}_${targetBatch}`;
+        
+        // Enable inputs
+        sendBtn.disabled = false;
+        inputField.disabled = false;
+        inputField.focus();
+        
+        // Unsubscribe from previous if active
+        if (currentAdminChatUnsubscribe) { currentAdminChatUnsubscribe(); }
+        
+        const messagesContainer = document.getElementById('adminChatMessages');
+        messagesContainer.innerHTML = `<p class="text-muted" style="text-align: center;">Connected to ${targetGrade} Class [${targetBatch}]</p>`;
+        
+        // Firebase specific query listener for live updates
+        currentAdminChatUnsubscribe = window.db.collection("chats")
+            .where("classId", "==", activeChatroomId)
+            .orderBy("timestamp", "asc")
+            .onSnapshot((snapshot) => {
+                // Determine if we need to auto-scroll to bottom
+                const isBottom = messagesContainer.scrollHeight - messagesContainer.scrollTop <= messagesContainer.clientHeight + 50;
+                
+                snapshot.docChanges().forEach((change) => {
+                    if (change.type === "added") {
+                        const msg = change.doc.data();
+                        const isSelf = msg.senderId === 'admin';
+                        const time = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        
+                        messagesContainer.innerHTML += `
+                            <div class="chat-message ${isSelf ? 'self' : 'other'}">
+                                <span class="chat-sender">${isSelf ? 'Principal' : msg.senderName}</span>
+                                <div class="chat-bubble ${isSelf ? 'admin-bubble' : ''}">${msg.text}</div>
+                                <span class="chat-time">${time}</span>
+                            </div>
+                        `;
+                    }
+                });
+                // Autoscroll to bottom if they were already at the bottom when msg arrives
+                if (isBottom || snapshot.docChanges().length > 0) {
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                }
+            });
+    });
+
+    chatForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const text = inputField.value.trim();
+        if (!text || !activeChatroomId) return;
+        
+        inputField.value = '';
+        inputField.focus();
+        
+        try {
+            await window.db.collection("chats").add({
+                classId: activeChatroomId,
+                senderId: 'admin',
+                senderName: 'Principal',
+                text: text,
+                timestamp: Date.now()
+            });
+        } catch (e) {
+            window.showToast("Message failed to send", "error");
+            console.error(e);
+        }
     });
 };
