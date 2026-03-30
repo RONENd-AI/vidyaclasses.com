@@ -93,14 +93,14 @@ const initUsersManager = () => {
              await secondaryApp.delete();
              window.showToast("Student created successfully!", "success");
              addUserForm.reset();
-             loadStudentList();
+             window.loadStudentList();
         } catch (error) { 
              window.showToast("Failed to create student: " + error.message, "error"); 
              console.error(error);
         }
         window.hideLoader();
     });
-    loadStudentList();
+    window.loadStudentList();
 };
 
 window.deleteStudent = async (docId, customId) => {
@@ -109,15 +109,16 @@ window.deleteStudent = async (docId, customId) => {
         try {
             await window.db.collection("users").doc(docId).delete();
             window.showToast(`Student ${customId} removed!`, "success");
-            loadStudentList();
+            window.loadStudentList();
         } catch (e) {
-            window.showToast("Failed to delete student", "error");
+            window.showToast("Failed to delete student directly", "error");
+            alert("Firebase Deletion Error: " + e.message);
         }
         window.hideLoader();
     }
 };
 
-const loadStudentList = async () => {
+window.loadStudentList = async () => {
     const tbody = document.querySelector('#studentsTable tbody');
     if(!tbody) return;
     try {
