@@ -106,8 +106,15 @@ window.loadAdminView = () => `
 
             <!-- Add User Form -->
             <div class="card mb-4" style="margin-bottom: 2rem;">
-                <h3>Add New Student</h3>
+                <h3>Add New User</h3>
                 <form id="addUserForm" class="grid grid-cols-2" style="margin-top: 1.5rem; gap: 1rem; align-items: end;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Account Role</label>
+                        <select id="newUserRole" class="form-control">
+                            <option value="student">Student Account</option>
+                            <option value="teacher">Teacher Account</option>
+                        </select>
+                    </div>
                     <div class="form-group" style="margin-bottom: 0;">
                         <label class="form-label">Full Name</label>
                         <input type="text" id="newUserName" class="form-control" placeholder="John Doe" required>
@@ -140,11 +147,11 @@ window.loadAdminView = () => `
                         <label class="form-label">Address</label>
                         <textarea id="newUserAddress" class="form-control" rows="1" placeholder="Flat No. 1, Pune" required></textarea>
                     </div>
-                    <button type="submit" class="btn btn-primary" style="grid-column: span 2;">Create Student Account</button>
+                    <button type="submit" class="btn btn-primary" style="grid-column: span 2;">Create Account</button>
                 </form>
             </div>
             <div class="card">
-                <h3>Student List</h3>
+                <h3>Manage Users Directory</h3>
                 <div class="table-container">
                     <table id="studentsTable">
                         <thead>
