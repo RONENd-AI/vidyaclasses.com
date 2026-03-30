@@ -153,15 +153,6 @@ const initStudentChat = () => {
     const inputField = document.getElementById('studentChatInput');
     const badge = document.getElementById('chatBadge');
 
-    // Safety check if user is not fully setup
-    if (!window.state.user.batch || !window.state.user.grade) {
-        msgContainer.innerHTML = `<p class="text-muted text-center" style="margin-top: 5rem;">You must be assigned to a Batch Class by the Admin to chat.</p>`;
-        inputField.disabled = true;
-        return;
-    }
-
-    const classId = `${window.state.user.grade}_${window.state.user.batch}`;
-
     let isChatOpen = false;
     let isFirstLoad = true;
 
@@ -173,9 +164,18 @@ const initStudentChat = () => {
         if (isChatOpen) {
             badge.style.display = 'none';
             msgContainer.scrollTop = msgContainer.scrollHeight;
-            inputField.focus();
+            if(!inputField.disabled) inputField.focus();
         }
     });
+
+    // Safety check if user is not fully setup
+    if (!window.state.user.batch || !window.state.user.grade) {
+        msgContainer.innerHTML = `<p class="text-muted text-center" style="margin-top: 5rem; padding: 1rem;"><strong>Chat Blocked</strong><br>Your profile doesn't have a Batch assignment.</p>`;
+        inputField.disabled = true;
+        return;
+    }
+
+    const classId = `${window.state.user.grade}_${window.state.user.batch}`;
 
     // Firestore Real-time Listener Hook
     window.db.collection("chats")
