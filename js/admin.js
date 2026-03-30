@@ -351,26 +351,28 @@ const initAdminChats = () => {
         // Firebase specific query listener for live updates
         currentAdminChatUnsubscribe = window.db.collection("chats")
             .where("classId", "==", activeChatroomId)
-            .orderBy("timestamp", "asc")
             .onSnapshot((snapshot) => {
                 // Determine if we need to auto-scroll to bottom
                 const isBottom = messagesContainer.scrollHeight - messagesContainer.scrollTop <= messagesContainer.clientHeight + 50;
                 
-                snapshot.docChanges().forEach((change) => {
-                    if (change.type === "added") {
-                        const msg = change.doc.data();
-                        const isSelf = msg.senderId === 'admin';
-                        const time = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                        
-                        messagesContainer.innerHTML += `
-                            <div class="chat-message ${isSelf ? 'self' : 'other'}">
-                                <span class="chat-sender">${isSelf ? 'Principal' : msg.senderName}</span>
-                                <div class="chat-bubble ${isSelf ? 'admin-bubble' : ''}">${msg.text}</div>
-                                <span class="chat-time">${time}</span>
-                            </div>
-                        `;
-                    }
+                const messages = [];
+                snapshot.forEach(doc => messages.push({ id: doc.id, ...doc.data() }));
+                messages.sort((a, b) => a.timestamp - b.timestamp);
+                
+                messagesContainer.innerHTML = '';
+                messages.forEach((msg) => {
+                    const isSelf = msg.senderId === 'admin';
+                    const time = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    
+                    messagesContainer.innerHTML += `
+                        <div class="chat-message ${isSelf ? 'self' : 'other'}">
+                            <span class="chat-sender">${isSelf ? 'Principal' : msg.senderName}</span>
+                            <div class="chat-bubble ${isSelf ? 'admin-bubble' : ''}">${msg.text}</div>
+                            <span class="chat-time">${time}</span>
+                        </div>
+                    `;
                 });
+                
                 // Autoscroll to bottom if they were already at the bottom when msg arrives
                 if (isBottom || snapshot.docChanges().length > 0) {
                     messagesContainer.scrollTop = messagesContainer.scrollHeight;
