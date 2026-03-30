@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vidya Classes | Student Portal</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Unicons (Icons) -->
+    <link rel="stylesheet" href="https://unicons.iconscout.com/release/v4.0.0/css/line.css">
+    
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <!-- Firebase SDKs (v9 Compat for simpler vanilla logic or modular) -->
+    <script type="module" src="js/app.js" defer></script>
+</head>
+<body class="dark-theme">
+    <div id="particles"></div>
+    
+    <nav class="navbar" id="navbar" style="display: none;">
+        <div class="nav-container">
+            <div class="logo">
+                <div class="logo-icon">VPC</div>
+                <span class="logo-text">Vidya Classes</span>
+            </div>
+            <div class="nav-actions">
+                <div class="user-badge" id="userBadge">
+                    <i class="uil uil-user"></i>
+                    <span id="navUserName">Student</span>
+                </div>
+                <button id="logoutBtn" class="btn btn-outline">
+                    <i class="uil uil-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main id="app">
+        <!-- Views injected here by app.js -->
+    </main>
+
+    <!-- Toasts / Loading overlay -->
+    <div id="toastContainer" class="toast-container"></div>
+    <div id="loader" class="loader-overlay">
+        <div class="spinner"></div>
+    </div>
+</body>
+</html>
