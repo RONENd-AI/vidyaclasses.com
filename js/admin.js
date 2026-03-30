@@ -119,6 +119,33 @@ const initUsersManager = () => {
         }
         window.hideLoader();
     });
+    
+    // Add logic for processing the saved edit changes from the modal popup
+    const editUserForm = document.getElementById('editUserForm');
+    if (editUserForm) {
+        editUserForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            window.showLoader();
+            try {
+                const docId = document.getElementById('editDocId').value;
+                await window.db.collection('users').doc(docId).update({
+                    name: document.getElementById('editUserName').value.trim(),
+                    grade: document.getElementById('editUserGrade').value,
+                    batch: document.getElementById('editUserBatch').value.trim(),
+                    phone: document.getElementById('editUserPhone').value.trim(),
+                    address: document.getElementById('editUserAddress').value.trim()
+                });
+                window.showToast("Student profile successfully updated!", "success");
+                window.closeEditModal();
+                window.loadStudentList();
+            } catch (err) {
+                window.showToast("Failed to update profile", "error");
+                console.error(err);
+            }
+            window.hideLoader();
+        });
+    }
+
     window.loadStudentList();
 };
 
@@ -165,6 +192,20 @@ const initPromotionTool = () => {
     });
 };
 
+window.openEditModal = (docId, name, grade, batch, phone, address) => {
+    document.getElementById('editDocId').value = docId;
+    document.getElementById('editUserName').value = name;
+    document.getElementById('editUserGrade').value = grade;
+    document.getElementById('editUserBatch').value = batch || '';
+    document.getElementById('editUserPhone').value = phone || '';
+    document.getElementById('editUserAddress').value = address || '';
+    document.getElementById('editUserModal').style.display = 'flex';
+};
+
+window.closeEditModal = () => {
+    document.getElementById('editUserModal').style.display = 'none';
+};
+
 window.deleteStudent = async (docId, customId) => {
     if (confirm(`Are you extremely sure you want to permanently remove the student ID: ${customId} from the database?`)) {
         window.showLoader();
@@ -198,7 +239,10 @@ window.loadStudentList = async () => {
                     <td style="font-size: 0.9rem; max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${data.address || ''}">
                         ${data.address || 'N/A'}
                     </td>
-                    <td><button class="btn btn-danger btn-sm" onclick="window.deleteStudent('${doc.id}', '${data.customId}')">Remove</button></td>
+                    <td style="display: flex; gap: 0.25rem;">
+                        <button class="btn btn-info btn-sm" onclick="window.openEditModal('${doc.id}', '${data.name.replace(/'/g, "\\'")}', '${data.grade}', '${data.batch || ''}', '${data.phone || ''}', '${data.address.replace(/'/g, "\\'") || ''}')" title="Edit Profile"><i class="uil uil-edit"></i></button>
+                        <button class="btn btn-danger btn-sm" onclick="window.deleteStudent('${doc.id}', '${data.customId}')"><i class="uil uil-trash-alt"></i></button>
+                    </td>
                 </tr>
             `;
         });
