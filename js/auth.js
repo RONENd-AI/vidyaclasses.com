@@ -1,57 +1,50 @@
-import { auth, db } from './firebase-config.js';
-import { 
-    signInWithEmailAndPassword, 
-    onAuthStateChanged, 
-    signOut,
-    createUserWithEmailAndPassword
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { state, navigate, showLoader, hideLoader, showToast } from './app.js';
-
-// Convert custom ID to dummy email. e.g. VP1234 -> VP1234@vidyaclasses.com
 const getEmailFromId = (customId) => `${customId.toLowerCase()}@vidyaclasses.com`;
 
-export const initAuth = () => {
+window.initAuth = () => {
     return new Promise((resolve) => {
-        if (!auth) {
-            resolve(false);
-            return;
-        }
+        if (!window.auth) { resolve(false); return; }
 
-        onAuthStateChanged(auth, async (user) => {
+        window.auth.onAuthStateChanged(async (user) => {
             if (user) {
-                // Fetch User Role and Metadata from Firestore
                 try {
-                    const userDoc = await getDoc(doc(db, "users", user.uid));
-                    if (userDoc.exists()) {
-                        state.user = { uid: user.uid, ...userDoc.data() };
-                        hideLoader();
-                        if (state.user.role === 'admin') navigate('/admin');
-                        else navigate('/student');
+                    const docRec = await window.db.collection('users').doc(user.uid).get();
+                    if (docRec.exists) {
+                        window.state.user = { uid: user.uid, ...docRec.data() };
+                        window.hideLoader();
+                        if (window.state.user.role === 'admin') window.navigate('/admin');
+                        else window.navigate('/student');
                     } else {
-                        // User exists in auth but not in Firestore - edge case
-                        showToast("User profile not found. Contact Admin.", "error");
-                        await signOut(auth);
-                        state.user = null;
-                        navigate('/login');
-                        hideLoader();
+                        // Recovery: if Admin account was created in Auth but blocked by Firestore Rules earlier, we instantly heal it!
+                        if (user.email === 'admin@vidyaclasses.com') {
+                            await window.db.collection('users').doc(user.uid).set({
+                                customId: 'admin', role: 'admin', name: 'Principal', grade: 'All'
+                            });
+                            window.state.user = { uid: user.uid, customId: 'admin', role: 'admin', name: 'Principal', grade: 'All' };
+                            window.hideLoader();
+                            window.navigate('/admin');
+                        } else {
+                            alert("Profile completely missing from Database! Have your admin recreate your user ID.");
+                            await window.auth.signOut();
+                            window.state.user = null;
+                            window.navigate('/login');
+                            window.hideLoader();
+                        }
                     }
                 } catch (error) {
-                    showToast("Error loading profile", "error");
-                    hideLoader();
+                    alert("Firestore Error: " + error.code + " -> " + error.message);
+                    window.hideLoader();
                 }
             } else {
-                state.user = null;
-                navigate('/login');
-                hideLoader();
-                setTimeout(() => attachLoginListener(), 100);
+                window.state.user = null;
+                window.navigate('/login');
+                window.hideLoader();
             }
             resolve(true);
         });
     });
 };
 
-function attachLoginListener() {
+window.attachLoginListener = () => {
     const loginForm = document.getElementById('loginForm');
     if (!loginForm) return;
 
@@ -59,64 +52,48 @@ function attachLoginListener() {
         e.preventDefault();
         const customId = document.getElementById('customId').value.trim();
         const password = document.getElementById('password').value.trim();
-        
-        if (!customId || !password) {
-            showToast("Please fill all fields", "error");
-            return;
-        }
+        if (!customId || !password) return window.showToast("Please fill all fields", "error");
 
-        showLoader();
+        window.showLoader();
         try {
-            // First time admin override check (Useful for initial setup if no database exists)
-            // If the database is missing, we create a default admin
-            if (customId === 'admin' && password === 'Admin@123') {
-                await attemptInitialAdminSetup();
-            }
-
+            if (customId.toLowerCase() === 'admin' && password === 'Admin@123') await attemptInitialAdminSetup();
             const email = getEmailFromId(customId);
-            await signInWithEmailAndPassword(auth, email, password);
-            showToast("Welcome back!", "success");
-            // onAuthStateChanged will handle the routing
+            await window.auth.signInWithEmailAndPassword(email, password);
+            window.showToast("Welcome back!", "success");
         } catch (error) {
-            hideLoader();
-            showToast("Invalid Credentials or Not Setup", "error");
-            console.error("Login mapping error:", error.message);
+            window.hideLoader();
+            alert("Firebase Login Error: " + error.message + " (Check if Email/Password is strictly enabled in Firebase Console!)");
         }
     });
-}
-
-export const logoutUser = async () => {
-    showLoader();
-    try {
-        await signOut(auth);
-        state.user = null;
-        showToast("Logged out successfully");
-    } catch (error) {
-        showToast("Error logging out", "error");
-    }
 };
 
-// Developer feature: create the first admin account automatically if signing in as 'admin'
+window.logoutUser = async () => {
+    window.showLoader();
+    try {
+        await window.auth.signOut();
+        window.showToast("Logged out successfully");
+    } catch(e) {}
+};
+
 async function attemptInitialAdminSetup() {
     const adminEmail = getEmailFromId('admin');
     try {
-        await signInWithEmailAndPassword(auth, adminEmail, 'Admin@123');
-        return; // already exists
+        await window.auth.signInWithEmailAndPassword(adminEmail, 'Admin@123');
+        return; 
     } catch (e) {
         if (e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential') {
             try {
-                // Auto create the first admin
-                const userCred = await createUserWithEmailAndPassword(auth, adminEmail, 'Admin@123');
-                await setDoc(doc(db, "users", userCred.user.uid), {
-                    customId: 'admin',
-                    role: 'admin',
-                    name: 'Principal',
-                    grade: 'All'
+                const userCred = await window.auth.createUserWithEmailAndPassword(adminEmail, 'Admin@123');
+                await window.db.collection('users').doc(userCred.user.uid).set({
+                    customId: 'admin', role: 'admin', name: 'Principal', grade: 'All'
                 });
-                showToast("System initial admin created!", "success");
+                window.showToast("System initial admin created!", "success");
             } catch (err) {
-                console.log("Admin setup error:", err);
+                 alert("Setup Creation Error: " + err.message + " (This often means Email/Password was NOT turned on inside the Firebase Auth settings!)");
+                 throw err;
             }
+        } else {
+             throw e;
         }
     }
 }
