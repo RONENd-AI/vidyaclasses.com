@@ -42,6 +42,20 @@ const initNotices = () => {
     window.loadAdminNotices();
 };
 
+window.deleteNotice = async (docId) => {
+    if (confirm("Permanently delete this notice from everyone's dashboard?")) {
+        window.showLoader();
+        try {
+            await window.db.collection("notices").doc(docId).delete();
+            window.showToast("Notice deleted successfully", "success");
+            window.loadAdminNotices();
+        } catch (e) {
+            window.showToast("Failed to delete notice", "error");
+        }
+        window.hideLoader();
+    }
+};
+
 window.loadAdminNotices = async () => {
     const list = document.getElementById('adminNoticesList');
     if(!list) return;
@@ -53,10 +67,11 @@ window.loadAdminNotices = async () => {
             const data = doc.data();
             const date = new Date(data.timestamp).toLocaleString();
             list.innerHTML += `
-                <div class="notice-item">
-                    <span class="badge badge-accent" style="float: right;">${data.targetGrade}</span>
+                <div class="notice-item" style="position: relative;">
+                    <button class="btn btn-sm btn-danger" style="position: absolute; right: 10px; bottom: 10px; padding: 0.3rem 0.6rem;" onclick="window.deleteNotice('${doc.id}')"><i class="uil uil-trash-alt"></i></button>
+                    <span class="badge badge-accent" style="float: right; margin-right: 40px;">${data.targetGrade}</span>
                     <span class="notice-time"><i class="uil uil-clock"></i> ${date}</span>
-                    <h4 class="notice-title">${data.title}</h4>
+                    <h4 class="notice-title" style="margin-right: 80px;">${data.title}</h4>
                     <p class="text-muted">${data.content}</p>
                 </div>
             `;
