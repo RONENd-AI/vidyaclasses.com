@@ -233,6 +233,44 @@ window.loadAdminView = () => `
                 </form>
             </div>
         </div>
+
+        <!-- Edit Profile Modal Overlay -->
+        <div id="editUserModal" class="modal-overlay" style="display: none;">
+            <div class="modal-content card fade-in">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-glass); margin-bottom: 1.5rem; padding-bottom: 0.5rem;">
+                    <h3><i class="uil uil-edit"></i> Edit Student Profile</h3>
+                    <button class="btn btn-outline btn-sm" onclick="window.closeEditModal()"><i class="uil uil-times"></i></button>
+                </div>
+                <form id="editUserForm" class="grid grid-cols-2" style="gap: 1rem; align-items: end;">
+                    <input type="hidden" id="editDocId">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" id="editUserName" class="form-control" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Grade</label>
+                        <select id="editUserGrade" class="form-control">
+                            <option value="8th">8th Grade</option>
+                            <option value="9th">9th Grade</option>
+                            <option value="10th">10th Grade</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Batch Class (e.g. 2026-2027)</label>
+                        <input type="text" id="editUserBatch" class="form-control" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Contact Number</label>
+                        <input type="text" id="editUserPhone" class="form-control" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0; grid-column: span 2;">
+                        <label class="form-label">Address</label>
+                        <textarea id="editUserAddress" class="form-control" rows="2" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-info" style="grid-column: span 2; margin-top: 1rem;">Save Profile Changes</button>
+                </form>
+            </div>
+        </div>
     </div>
 `;
 
