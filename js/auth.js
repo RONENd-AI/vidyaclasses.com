@@ -11,7 +11,7 @@ window.initAuth = () => {
                     if (docRec.exists) {
                         window.state.user = { uid: user.uid, ...docRec.data() };
                         window.hideLoader();
-                        if (window.state.user.role === 'admin') window.navigate('/admin');
+                        if (window.state.user.role === 'admin' || window.state.user.role === 'teacher') window.navigate('/admin');
                         else window.navigate('/student');
                     } else {
                         // Recovery: if Admin account was created in Auth but blocked by Firestore Rules earlier, we instantly heal it!
