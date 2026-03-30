@@ -1,24 +1,21 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
 
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyB181F0U5tN0A2Bgej3KyZAAhdz66vjdc0",
-  authDomain: "com-service-94cd6.firebaseapp.com",
-  projectId: "com-service-94cd6",
-  storageBucket: "com-service-94cd6.firebasestorage.app",
-  messagingSenderId: "883384574146",
-  appId: "1:883384574146:web:d8e4bc26641e4944b79b5b",
-  measurementId: "G-VK1KPGYJHH"
+  apiKey: "AIzaSyBWV2sgzBcJG3lFNFLdTebHR5K9D12o29g",
+  authDomain: "vidyaclasses-6de90.firebaseapp.com",
+  projectId: "vidyaclasses-6de90",
+  storageBucket: "vidyaclasses-6de90.firebasestorage.app",
+  messagingSenderId: "116164197592",
+  appId: "1:116164197592:web:1dd31b589daa5fe7b2ebad",
+  measurementId: "G-JTPGG5D32G"
 };
 
-let app, auth, db;
-try {
-    app = initializeApp(firebaseConfig);
-    auth = getAuth(app);
-    db = getFirestore(app);
-} catch (error) {
-    console.error("Firebase Initialization Error:", error);
-}
-
-export { auth, db };
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
