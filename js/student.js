@@ -180,34 +180,34 @@ const initStudentChat = () => {
     // Firestore Real-time Listener Hook
     window.db.collection("chats")
         .where("classId", "==", classId)
-        .orderBy("timestamp", "asc")
         .onSnapshot((snapshot) => {
-            if (isFirstLoad) {
-                msgContainer.innerHTML = '';
-            }
             const isBottom = msgContainer.scrollHeight - msgContainer.scrollTop <= msgContainer.clientHeight + 50;
 
-            snapshot.docChanges().forEach((change) => {
-                if (change.type === "added") {
-                    const msg = change.doc.data();
-                    const isSelf = msg.senderId === window.state.user.customId;
-                    const time = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    const isAdmin = msg.senderId === 'admin';
+            const messages = [];
+            snapshot.forEach(doc => messages.push({ id: doc.id, ...doc.data() }));
+            messages.sort((a, b) => a.timestamp - b.timestamp);
 
-                    msgContainer.innerHTML += `
-                        <div class="chat-message ${isSelf ? 'self' : 'other'}">
-                            ${!isSelf ? `<span class="chat-sender ${isAdmin ? 'admin-badge-text' : ''}">${isAdmin ? '<i class="uil uil-star"></i> ' : ''}${msg.senderName}</span>` : ''}
-                            <div class="chat-bubble ${isAdmin ? 'admin-bubble' : ''}">${msg.text}</div>
-                            <span class="chat-time">${time}</span>
-                        </div>
-                    `;
+            msgContainer.innerHTML = '';
+            messages.forEach((msg) => {
+                const isSelf = msg.senderId === window.state.user.customId;
+                const time = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const isAdmin = msg.senderId === 'admin';
 
-                    // Show Notification Badge if closed
-                    if (!isFirstLoad && !isChatOpen && !isSelf) {
-                        badge.style.display = 'inline-block';
-                    }
-                }
+                msgContainer.innerHTML += `
+                    <div class="chat-message ${isSelf ? 'self' : 'other'}">
+                        ${!isSelf ? `<span class="chat-sender ${isAdmin ? 'admin-badge-text' : ''}">${isAdmin ? '<i class="uil uil-star"></i> ' : ''}${msg.senderName}</span>` : ''}
+                        <div class="chat-bubble ${isAdmin ? 'admin-bubble' : ''}">${msg.text}</div>
+                        <span class="chat-time">${time}</span>
+                    </div>
+                `;
             });
+
+            // Show Notification Badge if closed
+            if (!isFirstLoad && !isChatOpen && snapshot.docChanges().length > 0) {
+                const hasNewExternal = snapshot.docChanges().some(c => c.type === 'added' && c.doc.data().senderId !== window.state.user.customId);
+                if (hasNewExternal) badge.style.display = 'inline-block';
+            }
+
             if (isBottom || isFirstLoad) msgContainer.scrollTop = msgContainer.scrollHeight;
             isFirstLoad = false;
         });
