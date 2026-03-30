@@ -1,5 +1,4 @@
-// HTML View Generators
-export const loadLoginView = () => `
+window.loadLoginView = () => `
     <div class="login-container">
         <div class="card login-card fade-in">
             <div class="login-header">
@@ -27,7 +26,7 @@ export const loadLoginView = () => `
     </div>
 `;
 
-export const loadAdminView = () => `
+window.loadAdminView = () => `
     <div class="container fade-in">
         <div class="dashboard-header">
             <h2>Admin Dashboard</h2>
@@ -69,7 +68,6 @@ export const loadAdminView = () => `
                 <div class="card">
                     <h3>Recent Notices</h3>
                     <div id="adminNoticesList" style="margin-top: 1.5rem;">
-                        <!-- dynamic notices -->
                         <p class="text-muted">Loading notices...</p>
                     </div>
                 </div>
@@ -112,7 +110,6 @@ export const loadAdminView = () => `
                                 <th>ID</th>
                                 <th>Name</th>
                                 <th>Grade</th>
-                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody><!-- dynamic --></tbody>
@@ -170,7 +167,7 @@ export const loadAdminView = () => `
     </div>
 `;
 
-export const loadStudentView = () => `
+window.loadStudentView = () => `
     <div class="container fade-in">
         <div class="dashboard-header">
             <h2>Welcome, <span id="studentNameTitle">Student</span></h2>
