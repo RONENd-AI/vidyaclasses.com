@@ -33,7 +33,7 @@ window.navigate = (path) => {
             document.getElementById('navUserName').textContent = window.state.user.name || window.state.user.customId;
         }
         
-        if (path === '/admin' && window.state.user?.role === 'admin') {
+        if (path === '/admin' && (window.state.user?.role === 'admin' || window.state.user?.role === 'teacher')) {
             appDiv.innerHTML = window.loadAdminView();
             window.setupAdminPanel();
         } else if (path === '/student' && window.state.user?.role === 'student') {
