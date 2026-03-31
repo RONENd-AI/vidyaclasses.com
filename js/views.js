@@ -1,26 +1,30 @@
 window.loadLoginView = () => `
     <div class="login-container">
-        <div class="card login-card fade-in">
-            <div class="login-header">
-                <div class="logo-icon">VPC</div>
-                <h2>Student Portal Login</h2>
-                <p>Enter your custom Vidya Classes ID.</p>
+        <div class="card login-card fade-in" style="padding: 0; overflow: hidden;">
+            <div style="display: flex; cursor: pointer; border-bottom: 1px solid var(--border-glass);">
+                <div id="tabStudentLogin" class="active" style="flex:1; padding: 1rem; text-align: center; font-weight: 600; border-bottom: 2px solid var(--accent-primary); background: rgba(99, 102, 241, 0.1); transition: all 0.3s; color: var(--text-primary);">Student Portal</div>
+                <div id="tabTeacherLogin" style="flex:1; padding: 1rem; text-align: center; font-weight: 600; border-bottom: 2px solid transparent; transition: all 0.3s; color: var(--text-muted);">Staff Portal</div>
             </div>
-            <form id="loginForm">
-                <div class="form-group">
-                    <label class="form-label">Custom ID (e.g. VP1234)</label>
-                    <input type="text" id="customId" class="form-control" placeholder="VP1234" required>
+            
+            <div style="padding: 2rem;">
+                <div class="login-header">
+                    <div class="logo-icon">VPC</div>
+                    <h2 id="loginTitle">Student Portal Login</h2>
+                    <p id="loginDesc" style="color: var(--text-muted);">Enter your custom Vidya Classes Student ID.</p>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Password</label>
-                    <input type="password" id="password" class="form-control" placeholder="VP@1234" required>
-                </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%;">
-                    <i class="uil uil-sign-in-alt"></i> Login
-                </button>
-            </form>
-            <div style="margin-top: 2rem; text-align: center; font-size: 0.85rem; color: var(--text-muted);">
-                <p>Admin? Use your admin ID to access the dashboard.</p>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label class="form-label" id="idLabel">Student ID (e.g. VP1234)</label>
+                        <input type="text" id="customId" class="form-control" placeholder="VP1234" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" id="password" class="form-control" placeholder="********" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">
+                        <i class="uil uil-sign-in-alt"></i> Login
+                    </button>
+                </form>
             </div>
         </div>
     </div>
@@ -151,7 +155,18 @@ window.loadAdminView = () => `
                 </form>
             </div>
             <div class="card">
-                <h3>Manage Users Directory</h3>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h3 style="margin-bottom: 0;">Manage Users Directory</h3>
+                    <div style="display: flex; gap: 1rem;">
+                        <select id="studentsFilterGrade" class="form-control" style="width: auto;">
+                            <option value="All">All Classes (Grades)</option>
+                            <option value="8th">8th Grade</option>
+                            <option value="9th">9th Grade</option>
+                            <option value="10th">10th Grade</option>
+                        </select>
+                        <button id="exportCsvBtn" class="btn btn-outline" title="Download as CSV"><i class="uil uil-export"></i> Export CSV</button>
+                    </div>
+                </div>
                 <div class="table-container">
                     <table id="studentsTable">
                         <thead>
