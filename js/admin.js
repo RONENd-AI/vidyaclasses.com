@@ -6,6 +6,28 @@ window.setupAdminPanel = () => {
     initAttendance();
     initResultsManager();
     initAdminChats();
+    
+    // Role based security wrapper for Teachers
+    if (window.state.user && window.state.user.role === 'teacher') {
+        const headerTitle = document.querySelector('.dashboard-header h2');
+        if (headerTitle) headerTitle.textContent = `Welcome, ${window.state.user.name}`;
+
+        const usersBtn = document.querySelector('[data-target="admin-users"]');
+        if (usersBtn) usersBtn.textContent = 'Student Directory';
+        
+        const promoTool = document.querySelector('#admin-users .card:nth-child(1)');
+        if (promoTool) promoTool.style.display = 'none';
+        
+        const addTool = document.querySelector('#admin-users .card:nth-child(2)');
+        if (addTool) addTool.style.display = 'none';
+        
+        const dirHeader = document.querySelector('#admin-users .card:nth-child(3) h3');
+        if (dirHeader) dirHeader.textContent = 'Student Directory';
+        
+        // Relabel the dashboard header
+        const badge = document.querySelector('.dashboard-header .badge');
+        if (badge) { badge.textContent = 'Teacher Mode'; badge.className = 'badge badge-warning'; }
+    }
 };
 
 const initTabs = () => {
@@ -60,18 +82,22 @@ window.loadAdminNotices = async () => {
     const list = document.getElementById('adminNoticesList');
     if(!list) return;
     try {
+        const canDelete = window.state.user && window.state.user.role === 'admin';
         const snapshot = await window.db.collection("notices").orderBy("timestamp", "desc").get();
         list.innerHTML = '';
         if (snapshot.empty) list.innerHTML = '<p class="text-muted">No notices found.</p>';
         snapshot.forEach(doc => {
             const data = doc.data();
             const date = new Date(data.timestamp).toLocaleString();
+            
+            const deleteBtnHtml = canDelete ? `<button class="btn btn-sm btn-danger" style="position: absolute; right: 10px; bottom: 10px; padding: 0.3rem 0.6rem;" onclick="window.deleteNotice('${doc.id}')"><i class="uil uil-trash-alt"></i></button>` : '';
+            
             list.innerHTML += `
                 <div class="notice-item" style="position: relative;">
-                    <button class="btn btn-sm btn-danger" style="position: absolute; right: 10px; bottom: 10px; padding: 0.3rem 0.6rem;" onclick="window.deleteNotice('${doc.id}')"><i class="uil uil-trash-alt"></i></button>
-                    <span class="badge badge-accent" style="float: right; margin-right: 40px;">${data.targetGrade}</span>
+                    ${deleteBtnHtml}
+                    <span class="badge badge-accent" style="float: right; margin-right: ${canDelete ? '40px' : '0px'};">${data.targetGrade}</span>
                     <span class="notice-time"><i class="uil uil-clock"></i> ${date}</span>
-                    <h4 class="notice-title" style="margin-right: 80px;">${data.title}</h4>
+                    <h4 class="notice-title" style="margin-right: ${canDelete ? '80px' : '0px'};">${data.title}</h4>
                     <p class="text-muted">${data.content}</p>
                 </div>
             `;
@@ -85,6 +111,7 @@ const initUsersManager = () => {
         e.preventDefault();
         window.showLoader();
         
+        const role = document.getElementById('newUserRole').value;
         const name = document.getElementById('newUserName').value.trim();
         const grade = document.getElementById('newUserGrade').value;
         const customId = document.getElementById('newUserId').value.trim().toUpperCase();
@@ -104,13 +131,13 @@ const initUsersManager = () => {
                  grade, 
                  batch,
                  customId, 
-                 role: 'student',
+                 role: role,
                  phone,
                  address
              });
              
              await secondaryApp.delete();
-             window.showToast("Student created successfully!", "success");
+             window.showToast("Account created successfully!", "success");
              addUserForm.reset();
              window.loadStudentList();
         } catch (error) { 
@@ -144,6 +171,16 @@ const initUsersManager = () => {
             }
             window.hideLoader();
         });
+    }
+
+    const filterSelect = document.getElementById('studentsFilterGrade');
+    if (filterSelect) {
+        filterSelect.addEventListener('change', () => { window.loadStudentList(); });
+    }
+
+    const exportBtn = document.getElementById('exportCsvBtn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', () => { window.exportUsersCsv(); });
     }
 
     window.loadStudentList();
@@ -225,28 +262,84 @@ window.loadStudentList = async () => {
     const tbody = document.querySelector('#studentsTable tbody');
     if(!tbody) return;
     try {
-        const snapshot = await window.db.collection("users").where("role", "==", "student").get();
-        tbody.innerHTML = '';
-        if (snapshot.empty) tbody.innerHTML = '<tr><td colspan="6" class="text-muted text-center">No students found.</td></tr>';
+        const isAdmin = window.state.user && window.state.user.role === 'admin';
+        const actionTh = document.querySelector('#studentsTable thead tr th:last-child');
+        if (actionTh) actionTh.style.display = isAdmin ? '' : 'none';
+
+        const filterGrade = document.getElementById('studentsFilterGrade') ? document.getElementById('studentsFilterGrade').value : 'All';
+
+        const snapshot = await window.db.collection("users").where("role", "in", ["student", "teacher"]).get();
+        
+        let usersData = [];
         snapshot.forEach(doc => {
             const data = doc.data();
+            if (filterGrade === 'All' || data.grade === filterGrade) {
+                usersData.push({ id: doc.id, ...data });
+            }
+        });
+
+        tbody.innerHTML = '';
+        if (usersData.length === 0) tbody.innerHTML = `<tr><td colspan="${isAdmin ? 6 : 5}" class="text-muted text-center">No users found.</td></tr>`;
+        
+        // Store globally so the CSV exporter can access the filtered set instantly
+        window.state.currentDirectoryList = usersData;
+
+        usersData.forEach(data => {
+            let actionTd = '';
+            if (isAdmin) {
+                actionTd = `<td style="display: flex; gap: 0.25rem;">
+                        <button class="btn btn-info btn-sm" onclick="window.openEditModal('${data.id}', '${data.name.replace(/'/g, "\\'")}', '${data.grade}', '${data.batch || ''}', '${data.phone || ''}', '${data.address.replace(/'/g, "\\'") || ''}')" title="Edit Profile"><i class="uil uil-edit"></i></button>
+                        <button class="btn btn-danger btn-sm" onclick="window.deleteStudent('${data.id}', '${data.customId}')"><i class="uil uil-trash-alt"></i></button>
+                    </td>`;
+            }
             tbody.innerHTML += `
                 <tr>
                     <td><strong>${data.customId}</strong></td>
-                    <td>${data.name}</td>
+                    <td>${data.name} ${data.role === 'teacher' ? '<span class="badge badge-warning" style="margin-left:5px;">Teacher</span>' : ''}</td>
                     <td><span class="badge badge-success">${data.grade}</span> <span class="badge badge-accent">${data.batch || 'No Batch'}</span></td>
                     <td style="font-size: 0.9rem;">${data.phone || 'N/A'}</td>
                     <td style="font-size: 0.9rem; max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${data.address || ''}">
                         ${data.address || 'N/A'}
                     </td>
-                    <td style="display: flex; gap: 0.25rem;">
-                        <button class="btn btn-info btn-sm" onclick="window.openEditModal('${doc.id}', '${data.name.replace(/'/g, "\\'")}', '${data.grade}', '${data.batch || ''}', '${data.phone || ''}', '${data.address.replace(/'/g, "\\'") || ''}')" title="Edit Profile"><i class="uil uil-edit"></i></button>
-                        <button class="btn btn-danger btn-sm" onclick="window.deleteStudent('${doc.id}', '${data.customId}')"><i class="uil uil-trash-alt"></i></button>
-                    </td>
+                    ${actionTd}
                 </tr>
             `;
         });
     } catch(err) {}
+};
+
+window.exportUsersCsv = () => {
+    const list = window.state.currentDirectoryList || [];
+    if (list.length === 0) return window.showToast("No data to export", "warning");
+
+    let csvContent = "Custom ID,Name,Role,Grade,Batch,Contact,Address\n";
+    
+    list.forEach(u => {
+        const id = `"${(u.customId || '').toString().replace(/"/g, '""')}"`;
+        const name = `"${(u.name || '').toString().replace(/"/g, '""')}"`;
+        const role = `"${(u.role || '').toString().replace(/"/g, '""')}"`;
+        const grade = `"${(u.grade || '').toString().replace(/"/g, '""')}"`;
+        const batch = `"${(u.batch || '').toString().replace(/"/g, '""')}"`;
+        const contact = `"${(u.phone || '').toString().replace(/"/g, '""')}"`;
+        const address = `"${(u.address || '').toString().replace(/"/g, '""')}"`;
+        
+        csvContent += `${id},${name},${role},${grade},${batch},${contact},${address}\n`;
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    
+    const filterSelect = document.getElementById('studentsFilterGrade');
+    const classLabel = filterSelect && filterSelect.value !== 'All' ? filterSelect.value : 'All';
+    link.setAttribute("download", `Vidya_Classes_Directory_${classLabel}.csv`);
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    window.showToast("CSV Downloaded!", "success");
 };
 
 const initAttendance = () => {
@@ -361,13 +454,14 @@ const initAdminChats = () => {
                 
                 messagesContainer.innerHTML = '';
                 messages.forEach((msg) => {
-                    const isSelf = msg.senderId === 'admin';
+                    const isSelf = msg.senderId === 'admin' || msg.senderId === window.state.user?.customId;
                     const time = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const isPrincipalMsg = msg.senderId === 'admin';
                     
                     messagesContainer.innerHTML += `
                         <div class="chat-message ${isSelf ? 'self' : 'other'}">
-                            <span class="chat-sender">${isSelf ? 'Principal' : msg.senderName}</span>
-                            <div class="chat-bubble ${isSelf ? 'admin-bubble' : ''}">${msg.text}</div>
+                            <span class="chat-sender">${isPrincipalMsg ? 'Principal' : msg.senderName}</span>
+                            <div class="chat-bubble ${isPrincipalMsg ? 'admin-bubble' : ''}">${msg.text}</div>
                             <span class="chat-time">${time}</span>
                         </div>
                     `;
@@ -389,10 +483,12 @@ const initAdminChats = () => {
         inputField.focus();
         
         try {
+            const isPrincipal = window.state.user.role === 'admin';
+            
             await window.db.collection("chats").add({
                 classId: activeChatroomId,
-                senderId: 'admin',
-                senderName: 'Principal',
+                senderId: isPrincipal ? 'admin' : window.state.user.customId,
+                senderName: isPrincipal ? 'Principal' : `${window.state.user.name} (Teacher)`,
                 text: text,
                 timestamp: Date.now()
             });
