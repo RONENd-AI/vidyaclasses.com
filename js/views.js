@@ -126,6 +126,7 @@ window.loadAdminView = () => `
                     <div class="form-group" style="margin-bottom: 0;">
                         <label class="form-label">Grade</label>
                         <select id="newUserGrade" class="form-control">
+                             <option value="NA">NA</option>
                             <option value="8th">8th Grade</option>
                             <option value="9th">9th Grade</option>
                             <option value="10th">10th Grade</option>
