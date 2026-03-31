@@ -410,9 +410,119 @@ tr:hover td { background: rgba(255, 255, 255, 0.02); }
     to { opacity: 1; transform: translateX(0); }
 }
 
-/* Responsive */
+/* Responsive Styles (Mobile & Tablets) */
 @media (max-width: 768px) {
+    /* Base Grid Layouts */
     .grid-cols-2, .grid-cols-3 { grid-template-columns: 1fr; }
-    .nav-container { padding: 1rem; }
+    .nav-container { padding: 0.75rem 1rem; }
     .container { padding: 1rem; }
+    .card { padding: 1.25rem; }
+
+    /* Login Scaling */
+    .login-container { padding: 0.5rem; }
+    .login-card { max-width: 100%; border-radius: 20px; }
+
+    /* Navbar Compression */
+    .logo-text { display: none; } /* Show only VTC on mobile */
+    .nav-actions { gap: 0.5rem; }
+    .user-badge { padding: 0.4rem 0.6rem; font-size: 0.75rem; }
+    #logoutBtn { font-size: 0; padding: 0.4rem 0.6rem; }
+    #logoutBtn i { font-size: 1.1rem; margin-right: 0; }
+
+    /* Dashboard Headers (Welcome, Name -> Badge) */
+    .dashboard-header { flex-direction: column; align-items: flex-start; gap: 0.5rem; margin-bottom: 1.5rem; }
+    .dashboard-header .badge { align-self: flex-start; }
+
+    /* Utility Action Bars (Filter & Buttons) */
+    .card > div[style*="justify-content: space-between"] {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 1rem;
+    }
+    .card > div > div[style*="display: flex; gap: 1rem;"],
+    .card > div > div[style*="display: flex; gap: 0.5rem;"] {
+        flex-direction: column;
+        width: 100%;
+        gap: 0.5rem !important;
+    }
+    .card > div > div > select, 
+    .card > div > div > button,
+    .card > div > div > input {
+        width: 100% !important;
+        justify-content: center;
+    }
+
+    /* Tabs & Soft Scrolling */
+    .tabs { 
+        flex-wrap: nowrap; 
+        overflow-x: auto; 
+        -webkit-overflow-scrolling: touch; 
+        padding-bottom: 0.5rem; 
+        margin-bottom: 1.5rem;
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab-btn { font-size: 0.9rem; padding: 0.4rem 0.75rem; }
+
+    /* Tables & Overflows */
+    .table-container { 
+        -webkit-overflow-scrolling: touch; 
+        border-radius: 8px;
+    }
+    th, td { padding: 0.75rem 0.5rem; font-size: 0.85rem; white-space: nowrap; }
+
+    /* Modals */
+    .modal-overlay { padding: 0.5rem; align-items: flex-end; }
+    .modal-content { 
+        padding: 1.5rem; 
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        border-radius: 20px 20px 0 0;
+        animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    
+    /* Avoid wide spans on modal forms */
+    .modal-content form .form-group[style*="grid-column: span 2"] {
+        grid-column: span 1 !important;
+    }
+
+    /* Student Dashboard Custom Overrides */
+    .card[style*="gap: 2rem"] > div[style*="display: flex; gap: 2rem;"] { 
+        gap: 1rem !important; 
+        flex-wrap: wrap; 
+        justify-content: space-between;
+    }
+    .calendar-grid { gap: 0.25rem; }
+    .calendar-day-header { font-size: 0.7rem; }
+    .calendar-day { font-size: 0.8rem; border-radius: 8px; }
+
+    /* Form Grids Fixes (Add User / Promote) */
+    form[id="addUserForm"], form[id="promoteForm"], form[id="postResultForm"] {
+        gap: 1rem !important;
+    }
+    form[id="addUserForm"] > div[style*="grid-column: span 2"],
+    form[id="promoteForm"] > button {
+        grid-column: span 1 !important;
+    }
+
+    /* Admin Class Chats */
+    #admin-chats .card { height: 80vh !important; }
+    #admin-chats .card > div[style*="gap: 1rem"] {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    #admin-chats select, #admin-chats input, #admin-chats button { width: 100% !important; }
+    
+    /* Floating Chat Widget */
+    .chat-widget {
+        width: 100%;
+        right: 0;
+        bottom: 0;
+        border-radius: 20px 20px 0 0;
+        border-right: none;
+        border-left: none;
+        box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
+    }
+    .chat-body { height: 75vh; }
+    .chat-header { padding: 1.25rem 1rem; border-radius: 20px 20px 0 0; }
 }
