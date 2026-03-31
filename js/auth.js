@@ -48,6 +48,41 @@ window.attachLoginListener = () => {
     const loginForm = document.getElementById('loginForm');
     if (!loginForm) return;
 
+    const tabStudent = document.getElementById('tabStudentLogin');
+    const tabStaff = document.getElementById('tabTeacherLogin');
+    const loginTitle = document.getElementById('loginTitle');
+    const loginDesc = document.getElementById('loginDesc');
+    const idLabel = document.getElementById('idLabel');
+    const customIdInput = document.getElementById('customId');
+
+    if (tabStudent && tabStaff) {
+        tabStudent.addEventListener('click', () => {
+            tabStudent.style.borderBottomColor = 'var(--accent-primary)';
+            tabStudent.style.background = 'rgba(99, 102, 241, 0.1)';
+            tabStudent.style.color = 'var(--text-primary)';
+            tabStaff.style.borderBottomColor = 'transparent';
+            tabStaff.style.background = 'transparent';
+            tabStaff.style.color = 'var(--text-muted)';
+            loginTitle.textContent = 'Student Portal Login';
+            loginDesc.textContent = 'Enter your custom Vidya Classes Student ID.';
+            idLabel.textContent = 'Student ID (e.g. VP1234)';
+            customIdInput.placeholder = 'VP1234';
+        });
+
+        tabStaff.addEventListener('click', () => {
+            tabStaff.style.borderBottomColor = 'var(--accent-primary)';
+            tabStaff.style.background = 'rgba(99, 102, 241, 0.1)';
+            tabStaff.style.color = 'var(--text-primary)';
+            tabStudent.style.borderBottomColor = 'transparent';
+            tabStudent.style.background = 'transparent';
+            tabStudent.style.color = 'var(--text-muted)';
+            loginTitle.textContent = 'Staff Portal Login';
+            loginDesc.textContent = 'Enter your Admin or Teacher ID.';
+            idLabel.textContent = 'Staff ID (e.g. admin or TCH01)';
+            customIdInput.placeholder = 'admin / TCH01';
+        });
+    }
+
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const customId = document.getElementById('customId').value.trim();
