@@ -8,9 +8,9 @@ window.loadLoginView = () => `
             
             <div style="padding: 2rem;">
                 <div class="login-header">
-                    <div class="logo-icon">VPC</div>
+                    <div class="logo-icon">VTC</div>
                     <h2 id="loginTitle">Student Portal Login</h2>
-                    <p id="loginDesc" style="color: var(--text-muted);">Enter your custom Vidya Classes Student ID.</p>
+                    <p id="loginDesc" style="color: var(--text-muted);">Enter your Vidya Classes Student ID.</p>
                 </div>
                 <form id="loginForm">
                     <div class="form-group">
