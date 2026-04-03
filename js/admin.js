@@ -4,6 +4,7 @@ window.setupAdminPanel = () => {
     initUsersManager();
     initPromotionTool();
     initAttendance();
+    initViewAttendance();
     initResultsManager();
     initAdminChats();
     
@@ -377,6 +378,48 @@ const initAttendance = () => {
                 window.hideLoader();
             });
         } catch (error) { rosterContainer.innerHTML = 'Error loading roster.'; }
+        window.hideLoader();
+    });
+};
+
+const initViewAttendance = () => {
+    document.getElementById('loadViewAttBtn').addEventListener('click', async () => {
+        const date = document.getElementById('viewAttDate').value;
+        const grade = document.getElementById('viewAttGrade').value;
+        if (!date || !grade) return window.showToast("Select date and grade", "warning");
+        
+        window.showLoader();
+        const rosterContainer = document.getElementById('viewAttendanceRoster');
+        rosterContainer.innerHTML = 'Loading attendance...';
+        try {
+            const attDocId = `${date}_${grade}`;
+            const attDoc = await window.db.collection("attendance").doc(attDocId).get();
+            const presentIds = attDoc.exists ? (attDoc.data().presentIds || []) : [];
+            
+            const snapshot = await window.db.collection("users").where("grade", "==", grade).where("role", "==", "student").get();
+            if (snapshot.empty) { rosterContainer.innerHTML = '<p class="text-muted">No students in grade.</p>'; window.hideLoader(); return; }
+            
+            let html = `<table style="width: 100%; margin-top: 1rem;"><thead><tr><th style="padding: 10px; border-bottom: 1px solid var(--border-glass); text-align: left;">ID</th><th style="padding: 10px; border-bottom: 1px solid var(--border-glass); text-align: left;">Name</th><th style="padding: 10px; border-bottom: 1px solid var(--border-glass); text-align: left;">Status</th></tr></thead><tbody>`;
+            let presentCount = 0;
+            let totalCount = 0;
+
+            snapshot.forEach(doc => {
+                 const st = doc.data();
+                 const isPresent = presentIds.includes(st.customId);
+                 if (isPresent) presentCount++;
+                 totalCount++;
+                 html += `<tr><td style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">${st.customId}</td><td style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">${st.name}</td><td style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);"><span class="badge ${isPresent ? 'badge-success' : 'badge-danger'}">${isPresent ? 'Present' : 'Absent'}</span></td></tr>`;
+            });
+            html += `</tbody></table>`;
+            
+            const summaryHtml = `<div style="margin-bottom: 1.5rem; display: flex; gap: 1rem;">
+                <div class="badge badge-accent" style="font-size: 1rem;">Total: ${totalCount}</div>
+                <div class="badge badge-success" style="font-size: 1rem;">Present: ${presentCount}</div>
+                <div class="badge badge-danger" style="font-size: 1rem;">Absent: ${totalCount - presentCount}</div>
+            </div>`;
+            
+            rosterContainer.innerHTML = summaryHtml + html;
+        } catch (error) { rosterContainer.innerHTML = '<p class="text-danger">Error loading attendance.</p>'; }
         window.hideLoader();
     });
 };

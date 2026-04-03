@@ -10,7 +10,7 @@ window.loadLoginView = () => `
                 <div class="login-header">
                     <div class="logo-icon">VTC</div>
                     <h2 id="loginTitle">Student Portal Login</h2>
-                    <p id="loginDesc" style="color: var(--text-muted);">Enter your Vidya Classes Student ID.</p>
+                    <p id="loginDesc" style="color: var(--text-muted);">Enter your custom Vidya Classes Student ID.</p>
                 </div>
                 <form id="loginForm">
                     <div class="form-group">
@@ -40,7 +40,8 @@ window.loadAdminView = () => `
         <div class="tabs">
             <button class="tab-btn active" data-target="admin-notices">Notice Board</button>
             <button class="tab-btn" data-target="admin-users">Manage Students</button>
-            <button class="tab-btn" data-target="admin-attendance">Attendance</button>
+            <button class="tab-btn" data-target="admin-attendance">Mark Attendance</button>
+            <button class="tab-btn" data-target="admin-view-attendance">View Attendance</button>
             <button class="tab-btn" data-target="admin-results">Post Results</button>
             <button class="tab-btn" data-target="admin-chats">Class Chats</button>
         </div>
@@ -126,7 +127,6 @@ window.loadAdminView = () => `
                     <div class="form-group" style="margin-bottom: 0;">
                         <label class="form-label">Grade</label>
                         <select id="newUserGrade" class="form-control">
-                             <option value="NA">NA</option>
                             <option value="8th">8th Grade</option>
                             <option value="9th">9th Grade</option>
                             <option value="10th">10th Grade</option>
@@ -200,6 +200,24 @@ window.loadAdminView = () => `
                 </div>
                 <div id="attendanceRoster">
                     <p class="text-muted">Select a date and grade to load the roster.</p>
+                </div>
+             </div>
+        </div>
+
+        <div id="admin-view-attendance" class="tab-content" style="display: none;">
+             <div class="card">
+                <h3>View Attendance</h3>
+                <div class="grid grid-cols-3" style="margin-top: 1.5rem; gap: 1rem; margin-bottom: 2rem;">
+                    <input type="date" id="viewAttDate" class="form-control">
+                    <select id="viewAttGrade" class="form-control">
+                        <option value="8th">8th Grade</option>
+                        <option value="9th">9th Grade</option>
+                        <option value="10th">10th Grade</option>
+                    </select>
+                    <button id="loadViewAttBtn" class="btn btn-outline">View Attendance</button>
+                </div>
+                <div id="viewAttendanceRoster">
+                    <p class="text-muted">Select a date and grade to view the attendance.</p>
                 </div>
              </div>
         </div>
